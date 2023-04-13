@@ -23,7 +23,7 @@ function App(): JSX.Element {
   const [contacts, setContacts] = useState<any[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const [indexDetail, setIndexDetail] = useState<any>(null);
+  const [detailID, setDetailID] = useState<any>(null);
   const isDarkMode = useColorScheme() === 'dark';
   const [newContactData, setNewContactData] = useState([
     {
@@ -76,7 +76,7 @@ function App(): JSX.Element {
     })
     console.log('data :>> ', data);
     setNewContactData(data)
-    setIndexDetail(index)
+    setDetailID(contacts[index].id)
     setModalVisible(true)
   }
 
@@ -104,6 +104,7 @@ function App(): JSX.Element {
         "firstName": "",
         "lastName": "",
         "age": 0,
+        "photo": "N/A"
       }
       newContactData.forEach(contactData => {
         switch (contactData.label) {
@@ -126,6 +127,57 @@ function App(): JSX.Element {
       console.log('error :>> ', error);
     } finally {
       resetData()
+      setDetailID(null)
+      fetchContacts()
+      setModalVisible(false)
+    }
+  }
+
+  const editContact = async (ID:string) => {
+    try {
+      let data = {
+        "firstName": "",
+        "lastName": "",
+        "age": 0,
+        "photo": "N/A"
+      }
+      newContactData.forEach(contactData => {
+        switch (contactData.label) {
+          case 'firstName':
+            data['firstName'] = contactData.value;
+            break;
+          case 'lastName':
+            data['lastName'] = contactData.value;
+            break;
+          case 'age':
+            data['age'] = parseInt(contactData.value);
+            break;
+          default:
+            break;
+        }
+      })
+      console.log('data edit :>> ', data);
+      const response = await axios.put('https://contact.herokuapp.com/contact/' + ID, data);
+      console.log('response :>> ', response);
+    } catch (error) {
+      console.log('error :>> ', error);
+    } finally {
+      resetData()
+      setDetailID(null)
+      fetchContacts()
+      setModalVisible(false)
+    }
+  }
+
+  const deleteContact = async (ID:string) => {
+    try {
+      const response = await axios.delete('https://contact.herokuapp.com/contact/' + ID);
+      console.log('response :>> ', response);
+    } catch (error) {
+      console.log('error :>> ', error);
+    } finally {
+      resetData()
+      setDetailID(null)
       fetchContacts()
       setModalVisible(false)
     }
@@ -305,18 +357,18 @@ function App(): JSX.Element {
                 })
               }
               {
-                !indexDetail &&
+                !detailID &&
                   <Button onPress={postContact} style='primary' text='Add Contact'/>
               }
               {
-                indexDetail !== null &&
-                  <Button onPress={() => setModalVisible(false)} style='primary' text='Edit'/>
+                detailID !== null &&
+                  <Button onPress={() => editContact(detailID)} style='primary' text='Edit'/>
               }
               {
-                indexDetail !== null &&
-                  <Button onPress={() => setModalVisible(false)} style='tertiary' text='Delete'/>
+                detailID !== null &&
+                  <Button onPress={() => deleteContact(detailID)} style='tertiary' text='Delete'/>
               }
-              <Button onPress={() => {setIndexDetail(null); setModalVisible(false); resetData()}} style='secondary' text='Cancel'/>
+              <Button onPress={() => {setDetailID(null); setModalVisible(false); resetData()}} style='secondary' text='Cancel'/>
             </View>
           </View>
         </Modal>
